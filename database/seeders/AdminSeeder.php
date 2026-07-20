@@ -6,20 +6,20 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class SuperAdminSeeder extends Seeder
+class AdminSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Seed the default admin account.
      */
     public function run(): void
     {
         User::updateOrCreate(
             ['email' => 'admin@example.com'],
             [
-                'name' => 'Mehorab',
+                'name' => 'Admin',
                 'username' => 'admin',
-                'password' => Hash::make('12345678'),
-                'role' => 'super_admin',
+                'password' => Hash::make('password'),
+                'role' => User::ROLE_ADMIN,
                 'status' => true,
             ]
         );
