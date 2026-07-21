@@ -79,11 +79,39 @@ php artisan db:seed --class=AdminSeeder
 
 ## Frontend Pages
 
-| URL          | Description                                      |
-|--------------|--------------------------------------------------|
-| `/`          | Welcome page                                     |
-| `/login`     | Split-screen login UI → `POST /api/login`        |
-| `/dashboard` | Dashboard UI → `GET /api/me` (requires token)    |
+| URL                  | Description                                      |
+|----------------------|--------------------------------------------------|
+| `/`                  | Welcome page                                     |
+| `/login`             | Split-screen login UI → `POST /api/login`        |
+| `/dashboard`         | Dashboard with left sidebar → `GET /api/me`      |
+| `/admin/profile`     | Profile editor (API-backed)                      |
+| `/admin/sections`    | Sections (placeholder)                           |
+| `/admin/skills`      | Skills (placeholder)                             |
+| `/admin/projects`    | Portfolio items (projects / case studies / works) |
+| `/admin/experience`  | Experience (placeholder)                         |
+| `/admin/education`   | Education (placeholder)                          |
+| `/admin/theme`       | Theme — frontend/public portfolio (coming soon)  |
+| `/admin/settings`    | Settings — admin brand colours                   |
+
+### Admin sidebar
+
+- Dark fixed sidebar on desktop (`bg-gray-900`), slide-over on mobile
+- Menu config: `config/admin_navigation.php`
+- Filter helper: `App\Support\AdminNavigation` (role + modules ready)
+- JS mirror for future SPA: `resources/js/config/sidebarMenu.js`
+- Component: `resources/views/components/admin/sidebar.blade.php`
+- Layout: `resources/views/layouts/dashboard.blade.php`
+
+### Admin brand colours (Settings only)
+
+- **Not** part of Theme — Theme is reserved for the public frontend later
+- Fields: `admin_primary`, `admin_secondary` (`#rrggbb`)
+- Defaults: `#0d9488` / `#14b8a6`
+- **Primary** → accents (active nav, buttons, logo chip)
+- **Secondary** → sidebar / navbar background
+- Applied only inside the admin shell via CSS variables (`--color-primary`, etc.)
+- UI: `/admin/settings` — colour picker + hex inputs + live preview
+- Persist: `settings` table; `GET /api/settings`, `PUT /api/admin/settings` (admin role)
 
 Auth flow (client-side):
 
@@ -98,10 +126,12 @@ JS modules:
 resources/js/
 ├── api.js              # fetch wrapper + token helpers
 ├── auth.js             # login / logout / me
+├── theme.js            # applyAdminTheme (admin panel only)
 ├── app.js              # page bootstrap
 └── pages/
     ├── login.js
-    └── dashboard.js
+    ├── dashboard.js
+    └── settings.js
 ```
 
 ## API Response Format
@@ -122,6 +152,7 @@ resources/js/
 | POST   | `/api/login`    | No   | Login + return token    |
 | POST   | `/api/logout`   | Yes  | Revoke current token    |
 | GET    | `/api/me`       | Yes  | Current user            |
+| GET    | `/api/settings` | Yes  | Admin brand colours     |
 
 ### Login (example)
 
@@ -143,6 +174,105 @@ Authorization: Bearer {token}
 Accept: application/json
 ```
 
+## Profile Module
+
+Authenticated user portfolio profile (multi-tenant via `user_id`).
+
+| Method | URI | Description |
+|--------|-----|-------------|
+| GET | `/api/profile` | Full profile + social_links + meta |
+| POST | `/api/profile` | Create/update profile (upsert) |
+| POST | `/api/profile/avatar` | Upload avatar (`multipart`: `image`) |
+| POST | `/api/profile/cover` | Upload cover (`multipart`: `image`) |
+| POST | `/api/social-links` | Upsert social links array |
+| DELETE | `/api/social-links/{id}` | Delete own social link |
+| POST | `/api/professional-meta` | Upsert key/value meta |
+
+Response `data` shape:
+
+```json
+{
+  "profile": { "name": "...", "title": "...", "avatar_url": "...", "cover_image_url": "..." },
+  "social_links": [],
+  "meta": []
+}
+```
+
+Images are stored on the `public` disk (`storage/app/public`). Run `php artisan storage:link` once.
+
+### Profile UI (Blade admin)
+
+- Page: `/admin/profile` (`resources/views/admin/profile.blade.php`)
+- Partials: `header`, `about`, `contact`, `social-links`, `professional-meta`
+- JS: `resources/js/pages/profile.js` + toast helper
+- Features: avatar preview/upload, completion bar, dynamic social/meta rows, save toasts
+
+## Skills Module
+
+Profession-agnostic skills with categories (multi-tenant via `user_id`). Supports percentage, text, or stars levels; featured flag ready for public portfolio themes.
+
+| Method | URI | Description |
+|--------|-----|-------------|
+| GET | `/api/categories` | List own categories (nested skills) |
+| POST | `/api/categories` | Create category |
+| PUT | `/api/categories/{id}` | Update category |
+| DELETE | `/api/categories/{id}` | Delete category (+ cascade skills) |
+| PATCH | `/api/categories/{id}/toggle` | Toggle `is_active` |
+| PATCH | `/api/categories/reorder` | Body: `{ "ids": [3,1,2] }` |
+| GET | `/api/skills` | List skills (`?category_id=` optional) |
+| POST | `/api/skills` | Create skill |
+| PUT | `/api/skills/{id}` | Update skill |
+| DELETE | `/api/skills/{id}` | Delete skill |
+| PATCH | `/api/skills/{id}/toggle` | Toggle `is_active` |
+| PATCH | `/api/skills/reorder` | Body: `{ "ids": [...], "category_id": 1 }` |
+
+### Tables
+
+- `skill_categories`: `user_id`, `name`, `order`, `is_active`
+- `skills`: `user_id`, `category_id`, `name`, `level`, `level_type` (`percentage` \| `text` \| `stars`), `is_featured`, `is_active`, `order`
+
+### Skills UI (Blade admin)
+
+- Page: `/admin/skills` (`resources/views/admin/skills.blade.php`)
+- Modals: category + skill forms
+- JS: `resources/js/pages/skills.js`
+- Features: CRUD, active toggles, drag-and-drop reorder, empty/loading states, toasts
+
+## Portfolio Items Module
+
+Universal portfolio items (projects / case studies / works / research) — multi-tenant via `user_id`. Sidebar label is currently “Projects”; internal API uses `portfolio_*`.
+
+| Method | URI | Description |
+|--------|-----|-------------|
+| GET | `/api/portfolio-categories` | List categories |
+| POST | `/api/portfolio-categories` | Create category |
+| PUT | `/api/portfolio-categories/{id}` | Update category |
+| DELETE | `/api/portfolio-categories/{id}` | Delete category (items keep data; `category_id` null) |
+| PATCH | `/api/portfolio-categories/{id}/toggle` | Toggle `is_active` |
+| PATCH | `/api/portfolio-categories/reorder` | Body: `{ "ids": [...] }` |
+| GET | `/api/portfolio-items` | List items (`?category_id=` optional) |
+| POST | `/api/portfolio-items` | Create item (slug auto-generated per user) |
+| PUT | `/api/portfolio-items/{id}` | Update item |
+| DELETE | `/api/portfolio-items/{id}` | Delete item + media files |
+| PATCH | `/api/portfolio-items/{id}/toggle` | Toggle `is_active` |
+| PATCH | `/api/portfolio-items/reorder` | Body: `{ "ids": [...] }` |
+| POST | `/api/portfolio-items/{id}/media` | Upload images (`multipart`: `images[]`) |
+| PATCH | `/api/portfolio-items/{id}/media/reorder` | Body: `{ "ids": [...] }` |
+| DELETE | `/api/portfolio-media/{id}` | Delete one image |
+
+### Tables
+
+- `portfolio_categories`: `user_id`, `name`, `order`, `is_active`
+- `portfolio_items`: `title`, `slug` (unique per user), `description`, `short_description`, `category_id`, `client_name`, `project_url`, dates, `is_featured`, `is_active`, `order`
+- `portfolio_media`: `portfolio_item_id`, `file_path`, `order`
+
+### Portfolio UI (Blade admin)
+
+- Page: `/admin/projects` (`resources/views/admin/projects.blade.php`)
+- Modals: item form + manage categories
+- JS: `resources/js/pages/projects.js`
+- Features: card grid, featured/inactive badges, multi-image upload, drag reorder, toasts
+
 ## Admin Endpoints
 
 Protected by `auth:sanctum` + `admin` middleware.
@@ -153,6 +283,7 @@ Protected by `auth:sanctum` + `admin` middleware.
 | GET    | `/api/admin/users/{id}` | Show user      |
 | PUT    | `/api/admin/users/{id}` | Update user    |
 | DELETE | `/api/admin/users/{id}` | Delete user    |
+| PUT    | `/api/admin/settings`   | Update admin brand colours |
 
 ## Roles
 
@@ -179,14 +310,46 @@ Protected by `auth:sanctum` + `admin` middleware.
 ```
 app/Http/Controllers/API/
 ├── AuthController.php
+├── ProfileController.php
+├── SocialLinkController.php
+├── ProfessionalMetaController.php
+├── SettingController.php
 └── Admin/UserController.php
-app/Http/Middleware/AdminMiddleware.php
-app/Http/Responses/ApiResponse.php
+app/Services/ProfileService.php
+app/Models/
+├── User.php
+├── Profile.php
+├── SocialLink.php
+├── ProfessionalMeta.php
+└── Setting.php
+app/Http/Resources/API/
+├── ProfileBundleResource.php
+├── ProfileResource.php
+├── SocialLinkResource.php
+└── ProfessionalMetaResource.php
+config/admin_navigation.php
+database/migrations/*_create_settings_table.php
 resources/views/
-├── layouts/app.blade.php
+├── layouts/
+│   ├── app.blade.php
+│   ├── guest.blade.php
+│   └── dashboard.blade.php      # Admin shell + sidebar
+├── components/
+│   ├── admin/sidebar.blade.php
+│   └── icon.blade.php
+├── admin/
+│   ├── settings.blade.php       # Admin brand colours
+│   └── coming-soon.blade.php
 ├── auth/login.blade.php
 ├── dashboard.blade.php
 └── welcome.blade.php
+resources/js/
+├── config/sidebarMenu.js
+├── sidebar.js
+├── theme.js
+├── api.js
+├── auth.js
+└── app.js
 routes/
 ├── api.php
 └── web.php

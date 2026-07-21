@@ -14,6 +14,14 @@ export default {
             fontFamily: {
                 sans: ['Outfit', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                primary: {
+                    DEFAULT: 'var(--color-primary)',
+                    hover: 'var(--color-primary-hover)',
+                },
+                secondary: 'var(--color-secondary)',
+                ring: 'var(--color-ring)',
+            },
         },
     },
 

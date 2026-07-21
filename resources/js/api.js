@@ -19,13 +19,19 @@ export function isAuthenticated() {
 /**
  * Fetch wrapper for /api endpoints.
  * Automatically attaches Bearer token when present.
+ * Skips Content-Type for FormData (multipart uploads).
  */
 export async function api(path, options = {}) {
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
     const headers = {
         Accept: 'application/json',
-        'Content-Type': 'application/json',
         ...(options.headers || {}),
     };
+
+    if (! isFormData && ! headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+    }
 
     const token = getToken();
 

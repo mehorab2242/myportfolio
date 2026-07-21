@@ -1,11 +1,16 @@
 import { isAuthenticated } from './auth';
 import { initLoginPage } from './pages/login';
-import { initDashboardPage, initLogoutButtons } from './pages/dashboard';
+import { initAdminShell, initDashboardPage, initLogoutButtons } from './pages/dashboard';
+import { initSettingsPage, loadAdminThemeFromApi } from './pages/settings';
+import { initProfilePage } from './pages/profile';
+import { initSkillsPage } from './pages/skills';
+import { initProjectsPage } from './pages/projects';
+import { initAdminSidebar } from './sidebar';
 
 document.addEventListener('DOMContentLoaded', () => {
     const page = document.body.dataset.page;
+    const layout = document.body.dataset.layout;
 
-    // Toggle navbar logout visibility based on token.
     document.querySelectorAll('[data-auth-only]').forEach((el) => {
         el.classList.toggle('hidden', !isAuthenticated());
     });
@@ -18,9 +23,24 @@ document.addEventListener('DOMContentLoaded', () => {
         initLoginPage();
     }
 
-    if (page === 'dashboard') {
-        initDashboardPage();
-    }
+    if (layout === 'dashboard') {
+        initAdminSidebar();
+        initLogoutButtons();
+        loadAdminThemeFromApi();
 
-    initLogoutButtons();
+        if (page === 'dashboard') {
+            initDashboardPage();
+        } else if (page === 'settings') {
+            initAdminShell();
+            initSettingsPage();
+        } else if (page === 'profile') {
+            initProfilePage();
+        } else if (page === 'skills') {
+            initSkillsPage();
+        } else if (page === 'projects') {
+            initProjectsPage();
+        } else {
+            initAdminShell();
+        }
+    }
 });

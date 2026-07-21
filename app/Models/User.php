@@ -7,6 +7,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -44,5 +46,40 @@ class User extends Authenticatable
     public function isUser(): bool
     {
         return $this->role === self::ROLE_USER;
+    }
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    public function socialLinks(): HasMany
+    {
+        return $this->hasMany(SocialLink::class);
+    }
+
+    public function professionalMeta(): HasMany
+    {
+        return $this->hasMany(ProfessionalMeta::class);
+    }
+
+    public function skillCategories(): HasMany
+    {
+        return $this->hasMany(SkillCategory::class)->orderBy('order');
+    }
+
+    public function skills(): HasMany
+    {
+        return $this->hasMany(Skill::class)->orderBy('order');
+    }
+
+    public function portfolioCategories(): HasMany
+    {
+        return $this->hasMany(PortfolioCategory::class)->orderBy('order');
+    }
+
+    public function portfolioItems(): HasMany
+    {
+        return $this->hasMany(PortfolioItem::class)->orderBy('order');
     }
 }

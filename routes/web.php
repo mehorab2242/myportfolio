@@ -15,4 +15,16 @@ Route::get('/', function () {
 });
 
 Route::view('/login', 'auth.login')->name('login');
+
 Route::view('/dashboard', 'dashboard')->name('dashboard');
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::view('/profile', 'admin.profile')->name('profile');
+    Route::view('/sections', 'admin.coming-soon', ['title' => 'Sections'])->name('sections');
+    Route::view('/skills', 'admin.skills')->name('skills');
+    Route::view('/projects', 'admin.projects')->name('projects');
+    Route::view('/experience', 'admin.coming-soon', ['title' => 'Experience'])->name('experience');
+    Route::view('/education', 'admin.coming-soon', ['title' => 'Education'])->name('education');
+    Route::view('/theme', 'admin.coming-soon', ['title' => 'Theme'])->name('theme');
+    Route::view('/settings', 'admin.settings')->name('settings');
+});

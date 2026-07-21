@@ -4,8 +4,10 @@
 
 @layer base {
     :root {
-        --color-brand: #0d9488;
-        --color-brand-dark: #0f766e;
+        --color-primary: #0d9488;
+        --color-primary-hover: #0f766e;
+        --color-secondary: #14b8a6;
+        --color-ring: #0d9488;
         --color-surface: #f8fafc;
         --color-ink: #0f172a;
     }
@@ -23,5 +25,48 @@
             linear-gradient(to bottom, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
         background-size: 48px 48px;
         mask-image: radial-gradient(ellipse at top right, black 20%, transparent 75%);
+    }
+
+    /* Soft primary accents (works with CSS variable hex) */
+    .bg-primary-soft {
+        background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+    }
+
+    .text-primary-token {
+        color: var(--color-primary);
+    }
+
+    .ring-primary-soft {
+        --tw-ring-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+    }
+
+    .shadow-primary-glow {
+        --tw-shadow-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+        --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    }
+
+    .bg-primary-token {
+        background-color: var(--color-primary);
+    }
+
+    .bg-secondary-token {
+        background-color: var(--color-secondary);
+    }
+
+    .bg-brand-gradient {
+        background-image: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    }
+
+    .hover\:bg-primary-hover-token:hover {
+        background-color: var(--color-primary-hover);
+    }
+
+    .focus\:ring-primary-token:focus {
+        --tw-ring-color: var(--color-ring);
+    }
+
+    .focus\:border-primary-token:focus {
+        border-color: var(--color-primary);
     }
 }

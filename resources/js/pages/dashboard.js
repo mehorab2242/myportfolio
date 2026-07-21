@@ -1,45 +1,64 @@
 import { clearToken, logout, me, requireAuth } from '../auth';
 
-export function initDashboardPage() {
+/**
+ * Shared auth gate for all pages using layouts.dashboard.
+ * Also fills the top-bar user chip when /api/me succeeds.
+ */
+export async function initAdminShell() {
     if (!requireAuth()) {
-        return;
+        return null;
     }
 
+    try {
+        const { response, payload } = await me();
+
+        if (!response.ok || !payload.status) {
+            clearToken();
+            window.location.href = '/login';
+            return null;
+        }
+
+        const user = payload.data.user;
+        const chip = document.getElementById('sidebar-user-name');
+
+        if (chip) {
+            chip.textContent = user.name ?? user.email ?? 'Account';
+        }
+
+        return user;
+    } catch {
+        clearToken();
+        window.location.href = '/login';
+        return null;
+    }
+}
+
+export function initDashboardPage() {
     const loadingState = document.getElementById('dashboard-loading');
     const contentState = document.getElementById('dashboard-content');
     const nameEl = document.getElementById('user-name');
     const emailEl = document.getElementById('user-email');
     const roleEl = document.getElementById('user-role');
 
+    if (!loadingState && !contentState) {
+        return;
+    }
+
     const showContent = () => {
         loadingState?.classList.add('hidden');
         contentState?.classList.remove('hidden');
     };
 
-    const loadUser = async () => {
-        try {
-            const { response, payload } = await me();
-
-            if (!response.ok || !payload.status) {
-                clearToken();
-                window.location.href = '/login';
-                return;
-            }
-
-            const user = payload.data.user;
-
-            if (nameEl) nameEl.textContent = user.name ?? '—';
-            if (emailEl) emailEl.textContent = user.email ?? '—';
-            if (roleEl) roleEl.textContent = user.role ?? '—';
-
-            showContent();
-        } catch {
-            clearToken();
-            window.location.href = '/login';
+    initAdminShell().then((user) => {
+        if (!user) {
+            return;
         }
-    };
 
-    loadUser();
+        if (nameEl) nameEl.textContent = user.name ?? '—';
+        if (emailEl) emailEl.textContent = user.email ?? '—';
+        if (roleEl) roleEl.textContent = user.role ?? '—';
+        showContent();
+    });
 }
 
 export function initLogoutButtons() {
