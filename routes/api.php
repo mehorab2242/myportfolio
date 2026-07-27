@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\API\Admin\UserController as AdminUserController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\EducationController;
+use App\Http\Controllers\API\ExperienceController;
 use App\Http\Controllers\API\PortfolioCategoryController;
 use App\Http\Controllers\API\PortfolioItemController;
 use App\Http\Controllers\API\ProfessionalMetaController;
@@ -73,6 +75,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/portfolio-items/{id}/media', [PortfolioItemController::class, 'uploadMedia']);
     Route::patch('/portfolio-items/{id}/media/reorder', [PortfolioItemController::class, 'reorderMedia']);
     Route::delete('/portfolio-media/{id}', [PortfolioItemController::class, 'destroyMedia']);
+
+    // Education module — multi-tenant via user_id
+    Route::get('/educations', [EducationController::class, 'index']);
+    Route::post('/educations', [EducationController::class, 'store']);
+    Route::patch('/educations/reorder', [EducationController::class, 'reorder']);
+    Route::put('/educations/{id}', [EducationController::class, 'update']);
+    Route::delete('/educations/{id}', [EducationController::class, 'destroy']);
+    Route::patch('/educations/{id}/toggle', [EducationController::class, 'toggle']);
+
+    // Experience module — multi-tenant via user_id
+    Route::get('/experiences', [ExperienceController::class, 'index']);
+    Route::post('/experiences', [ExperienceController::class, 'store']);
+    Route::patch('/experiences/reorder', [ExperienceController::class, 'reorder']);
+    Route::put('/experiences/{id}', [ExperienceController::class, 'update']);
+    Route::delete('/experiences/{id}', [ExperienceController::class, 'destroy']);
+    Route::patch('/experiences/{id}/toggle', [ExperienceController::class, 'toggle']);
 
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/users', [AdminUserController::class, 'index']);

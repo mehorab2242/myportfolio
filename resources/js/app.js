@@ -5,6 +5,8 @@ import { initSettingsPage, loadAdminThemeFromApi } from './pages/settings';
 import { initProfilePage } from './pages/profile';
 import { initSkillsPage } from './pages/skills';
 import { initProjectsPage } from './pages/projects';
+import { initEducationPage } from './pages/education';
+import { initExperiencePage } from './pages/experience';
 import { initAdminSidebar } from './sidebar';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,6 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
             initSkillsPage();
         } else if (page === 'projects') {
             initProjectsPage();
+        } else if (page === 'education') {
+            initEducationPage();
+        } else if (page === 'experience') {
+            initExperiencePage();
         } else {
             initAdminShell();
         }

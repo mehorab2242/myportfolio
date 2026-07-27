@@ -82,4 +82,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(PortfolioItem::class)->orderBy('order');
     }
+
+    public function educations(): HasMany
+    {
+        return $this->hasMany(Education::class)->orderBy('order');
+    }
+
+    public function experiences(): HasMany
+    {
+        return $this->hasMany(Experience::class)->orderBy('order');
+    }
 }

@@ -88,8 +88,8 @@ php artisan db:seed --class=AdminSeeder
 | `/admin/sections`    | Sections (placeholder)                           |
 | `/admin/skills`      | Skills (placeholder)                             |
 | `/admin/projects`    | Portfolio items (projects / case studies / works) |
-| `/admin/experience`  | Experience (placeholder)                         |
-| `/admin/education`   | Education (placeholder)                          |
+| `/admin/experience`  | Experience (timeline)                            |
+| `/admin/education`   | Education (timeline)                             |
 | `/admin/theme`       | Theme — frontend/public portfolio (coming soon)  |
 | `/admin/settings`    | Settings — admin brand colours                   |
 
@@ -272,6 +272,58 @@ Universal portfolio items (projects / case studies / works / research) — multi
 - Modals: item form + manage categories
 - JS: `resources/js/pages/projects.js`
 - Features: card grid, featured/inactive badges, multi-image upload, drag reorder, toasts
+
+## Education Module
+
+Profession-agnostic education history (degrees, diplomas, medical/law school, etc.) — multi-tenant via `user_id`.
+
+| Method | URI | Description |
+|--------|-----|-------------|
+| GET | `/api/educations` | List own education entries |
+| POST | `/api/educations` | Create entry |
+| PUT | `/api/educations/{id}` | Update entry |
+| DELETE | `/api/educations/{id}` | Delete entry |
+| PATCH | `/api/educations/{id}/toggle` | Toggle `is_active` |
+| PATCH | `/api/educations/reorder` | Body: `{ "ids": [...] }` |
+
+### Table
+
+- `educations`: `user_id`, `degree`, `institution`, `field_of_study`, `location`, `start_date`, `end_date`, `is_current`, `grade`, `description`, `is_active`, `order`
+
+When `is_current` is true, `end_date` is cleared and UI shows “Present”.
+
+### Education UI (Blade admin)
+
+- Page: `/admin/education` (`resources/views/admin/education.blade.php`)
+- Modal: create/edit form
+- JS: `resources/js/pages/education.js` (Flatpickr dates)
+- Features: timeline layout, currently-studying toggle, drag reorder, toasts
+
+## Experience Module
+
+Profession-agnostic work history (companies, hospitals, firms, studios) — multi-tenant via `user_id`.
+
+| Method | URI | Description |
+|--------|-----|-------------|
+| GET | `/api/experiences` | List own experience entries |
+| POST | `/api/experiences` | Create entry |
+| PUT | `/api/experiences/{id}` | Update entry |
+| DELETE | `/api/experiences/{id}` | Delete entry |
+| PATCH | `/api/experiences/{id}/toggle` | Toggle `is_active` |
+| PATCH | `/api/experiences/reorder` | Body: `{ "ids": [...] }` |
+
+### Table
+
+- `experiences`: `user_id`, `title`, `organization`, `employment_type` (`full_time` \| `part_time` \| `freelance` \| `internship` \| `contract` \| `other`), `location`, `start_date`, `end_date`, `is_current`, `description`, `is_active`, `order`
+
+When `is_current` is true, `end_date` is cleared and UI shows “Present”.
+
+### Experience UI (Blade admin)
+
+- Page: `/admin/experience` (`resources/views/admin/experience.blade.php`)
+- Modal: create/edit form
+- JS: `resources/js/pages/experience.js` (Flatpickr dates)
+- Features: timeline layout, currently-working toggle, employment type, drag reorder, toasts
 
 ## Admin Endpoints
 
