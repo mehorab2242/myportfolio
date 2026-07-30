@@ -1,5 +1,6 @@
 import { isAuthenticated } from './auth';
 import { initLoginPage } from './pages/login';
+import { initRegisterPage } from './pages/register';
 import { initAdminShell, initDashboardPage, initLogoutButtons } from './pages/dashboard';
 import { initSettingsPage, loadAdminThemeFromApi } from './pages/settings';
 import { initProfilePage } from './pages/profile';
@@ -7,6 +8,7 @@ import { initSkillsPage } from './pages/skills';
 import { initProjectsPage } from './pages/projects';
 import { initEducationPage } from './pages/education';
 import { initExperiencePage } from './pages/experience';
+import { initPortfolioPage } from './pages/portfolio';
 import { initAdminSidebar } from './sidebar';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const layout = document.body.dataset.layout;
 
     document.querySelectorAll('[data-auth-only]').forEach((el) => {
-        el.classList.toggle('hidden', !isAuthenticated());
+        el.classList.toggle('hidden', ! isAuthenticated());
     });
 
     document.querySelectorAll('[data-guest-only]').forEach((el) => {
@@ -23,6 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (page === 'login') {
         initLoginPage();
+    }
+
+    if (page === 'register') {
+        initRegisterPage();
+    }
+
+    if (page === 'portfolio') {
+        initPortfolioPage();
     }
 
     if (layout === 'dashboard') {

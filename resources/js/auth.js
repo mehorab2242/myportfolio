@@ -2,10 +2,17 @@ import { api, clearToken, getToken, isAuthenticated, setToken } from './api';
 
 export { clearToken, getToken, isAuthenticated, setToken };
 
-export async function login(email, password) {
+export async function login(login, password) {
     return api('/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ login, password }),
+    });
+}
+
+export async function register(payload) {
+    return api('/register', {
+        method: 'POST',
+        body: JSON.stringify(payload),
     });
 }
 
@@ -26,7 +33,7 @@ export async function me() {
  * Returns false when redirected.
  */
 export function requireAuth() {
-    if (!isAuthenticated()) {
+    if (! isAuthenticated()) {
         window.location.href = '/login';
         return false;
     }
@@ -35,11 +42,11 @@ export function requireAuth() {
 }
 
 /**
- * Redirect to dashboard if already logged in.
+ * Redirect to admin if already logged in.
  */
 export function redirectIfAuthenticated() {
     if (isAuthenticated()) {
-        window.location.href = '/dashboard';
+        window.location.href = '/admin';
         return true;
     }
 

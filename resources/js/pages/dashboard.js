@@ -5,14 +5,14 @@ import { clearToken, logout, me, requireAuth } from '../auth';
  * Also fills the top-bar user chip when /api/me succeeds.
  */
 export async function initAdminShell() {
-    if (!requireAuth()) {
+    if (! requireAuth()) {
         return null;
     }
 
     try {
         const { response, payload } = await me();
 
-        if (!response.ok || !payload.status) {
+        if (! response.ok || ! payload.status) {
             clearToken();
             window.location.href = '/login';
             return null;
@@ -37,10 +37,13 @@ export function initDashboardPage() {
     const loadingState = document.getElementById('dashboard-loading');
     const contentState = document.getElementById('dashboard-content');
     const nameEl = document.getElementById('user-name');
+    const usernameEl = document.getElementById('user-username');
     const emailEl = document.getElementById('user-email');
-    const roleEl = document.getElementById('user-role');
+    const urlEl = document.getElementById('user-portfolio-url');
+    const welcomeEl = document.getElementById('dashboard-welcome');
+    const viewBtn = document.getElementById('view-portfolio-btn');
 
-    if (!loadingState && !contentState) {
+    if (! loadingState && ! contentState) {
         return;
     }
 
@@ -50,13 +53,25 @@ export function initDashboardPage() {
     };
 
     initAdminShell().then((user) => {
-        if (!user) {
+        if (! user) {
             return;
         }
 
+        if (welcomeEl) {
+            welcomeEl.textContent = `Welcome, ${user.name ?? 'there'}`;
+        }
         if (nameEl) nameEl.textContent = user.name ?? '—';
+        if (usernameEl) usernameEl.textContent = user.username ?? '—';
         if (emailEl) emailEl.textContent = user.email ?? '—';
-        if (roleEl) roleEl.textContent = user.role ?? '—';
+
+        const portfolioUrl = user.portfolio_url || (user.username ? `/${user.username}` : '#');
+        if (urlEl) urlEl.textContent = portfolioUrl;
+        if (viewBtn) {
+            viewBtn.href = portfolioUrl;
+            viewBtn.classList.toggle('pointer-events-none', ! user.username);
+            viewBtn.classList.toggle('opacity-50', ! user.username);
+        }
+
         showContent();
     });
 }

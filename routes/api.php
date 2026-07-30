@@ -8,6 +8,7 @@ use App\Http\Controllers\API\PortfolioCategoryController;
 use App\Http\Controllers\API\PortfolioItemController;
 use App\Http\Controllers\API\ProfessionalMetaController;
 use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\API\PublicPortfolioController;
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\SkillCategoryController;
 use App\Http\Controllers\API\SkillController;
@@ -26,9 +27,14 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Public portfolio by username (no auth)
+Route::get('/portfolio/{username}', [PublicPortfolioController::class, 'show'])
+    ->where('username', '[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/user', [AuthController::class, 'me']);
 
     Route::get('/settings', [SettingController::class, 'show']);
 

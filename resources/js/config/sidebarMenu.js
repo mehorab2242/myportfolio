@@ -3,7 +3,7 @@
  * Filter with filterSidebarMenu({ role, modules }).
  */
 export const sidebarMenu = [
-    { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard', roles: ['admin', 'user'], modules: [] },
+    { key: 'dashboard', label: 'Dashboard', href: '/admin', icon: 'layout-dashboard', roles: ['admin', 'user'], modules: [] },
     { key: 'profile', label: 'Profile', href: '/admin/profile', icon: 'user', roles: ['admin', 'user'], modules: [] },
     { key: 'sections', label: 'Sections', href: '/admin/sections', icon: 'layout-template', roles: ['admin', 'user'], modules: ['portfolio'] },
     { key: 'skills', label: 'Skills', href: '/admin/skills', icon: 'sparkles', roles: ['admin', 'user'], modules: ['portfolio'] },

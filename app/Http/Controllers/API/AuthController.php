@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\LoginRequest;
+use App\Http\Requests\API\RegisterRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -16,19 +17,15 @@ class AuthController extends Controller
     /**
      * Register a new user and return a Sanctum token.
      */
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
-            'username' => $this->generateUsername($validated['email']),
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
             'role' => User::ROLE_USER,
             'status' => true,
         ]);
@@ -36,27 +33,30 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return ApiResponse::success('Registration successful.', [
-            'user' => $user,
+            'user' => $this->publicUser($user),
             'token' => $token,
             'token_type' => 'Bearer',
         ], 201);
     }
 
     /**
-     * Authenticate a user and return a Sanctum token.
+     * Authenticate via email OR username and return a Sanctum token.
      */
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $validated = $request->validated();
+        $login = $validated['login'];
 
-        $user = User::where('email', $validated['email'])->first();
+        $user = User::query()
+            ->where(function ($query) use ($login) {
+                $query->where('email', $login)
+                    ->orWhere('username', $login);
+            })
+            ->first();
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'login' => ['The provided credentials are incorrect.'],
             ]);
         }
 
@@ -67,7 +67,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return ApiResponse::success('Login successful.', [
-            'user' => $user,
+            'user' => $this->publicUser($user),
             'token' => $token,
             'token_type' => 'Bearer',
         ]);
@@ -89,25 +89,25 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return ApiResponse::success('Authenticated user retrieved.', [
-            'user' => $request->user(),
+            'user' => $this->publicUser($request->user()),
         ]);
     }
 
     /**
-     * Generate a unique username from an email address.
+     * @return array<string, mixed>
      */
-    private function generateUsername(string $email): string
+    private function publicUser(User $user): array
     {
-        $base = Str::slug(Str::before($email, '@'), '_');
-        $username = $base !== '' ? $base : 'user';
-        $candidate = $username;
-        $suffix = 1;
-
-        while (User::where('username', $candidate)->exists()) {
-            $candidate = $username.'_'.$suffix;
-            $suffix++;
-        }
-
-        return $candidate;
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'role' => $user->role,
+            'status' => $user->status,
+            'portfolio_url' => url('/'.$user->username),
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
     }
 }

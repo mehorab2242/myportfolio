@@ -12,7 +12,7 @@ return [
     [
         'key' => 'dashboard',
         'label' => 'Dashboard',
-        'route' => 'dashboard',
+        'route' => 'admin.dashboard',
         'icon' => 'layout-dashboard',
         'roles' => ['admin', 'user'],
         'modules' => [],

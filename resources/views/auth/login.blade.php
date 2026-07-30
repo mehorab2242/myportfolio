@@ -100,17 +100,17 @@
 
                 <form id="login-form" class="space-y-5" novalidate>
                     <div>
-                        <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">
-                            Email address <span class="text-rose-500">*</span>
+                        <label for="login" class="mb-1.5 block text-sm font-medium text-slate-700">
+                            Email or username <span class="text-rose-500">*</span>
                         </label>
                         <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            autocomplete="email"
+                            id="login"
+                            name="login"
+                            type="text"
+                            autocomplete="username"
                             required
                             class="block w-full rounded-xl border-slate-200 bg-slate-50 px-3.5 py-2.5 text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-teal-600 focus:bg-white focus:ring-teal-600"
-                            placeholder="you@example.com"
+                            placeholder="you@example.com or username"
                         >
                     </div>
 
@@ -175,8 +175,9 @@
                     </button>
                 </form>
 
-                <p class="mt-8 text-center text-xs text-slate-400">
-                    Authorized users only. Access is secured with API tokens.
+                <p class="mt-8 text-center text-sm text-slate-500">
+                    New here?
+                    <a href="{{ route('register') }}" class="font-semibold text-teal-700 hover:text-teal-800">Create an account</a>
                 </p>
             </div>
         </div>

@@ -22,6 +22,6 @@
         @endforelse
     </ul>
 
-    <p><a href="{{ route('dashboard') }}">Back to Dashboard</a></p>
+    <p><a href="{{ route('admin.dashboard') }}">Back to Dashboard</a></p>
 </body>
 </html>

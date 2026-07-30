@@ -12,11 +12,12 @@ A Laravel SaaS portfolio platform with **API-first** Sanctum authentication and 
 
 ## Features
 
-- API authentication: register, login, logout, me
-- Custom login page + dashboard (token stored in `localStorage`)
-- Sanctum personal access tokens
-- Roles: `admin`, `user`
-- Admin API for user management (list, show, update, delete)
+- API authentication: register, login (email **or** username), logout, me/user
+- User-owned portfolio URL: `/{username}` (e.g. `myportfolio.com/jane`)
+- Public portfolio API: `GET /api/portfolio/{username}` (active data only)
+- Admin panel under `/admin/*` (Sanctum token in `localStorage`)
+- Strict multi-tenant isolation via `user_id` on every module
+- Roles: `admin`, `user` (platform admin API only — each user is independent)
 - Consistent JSON response format
 - Default admin seeder
 
@@ -70,6 +71,7 @@ Open your virtual host (e.g. `http://myportfolio.test`).
 | Field    | Value               |
 |----------|---------------------|
 | Email    | `admin@example.com` |
+| Username | `siteadmin`         |
 | Password | `password`          |
 | Role     | `admin`             |
 
@@ -81,17 +83,19 @@ php artisan db:seed --class=AdminSeeder
 
 | URL                  | Description                                      |
 |----------------------|--------------------------------------------------|
-| `/`                  | Welcome page                                     |
-| `/login`             | Split-screen login UI → `POST /api/login`        |
-| `/dashboard`         | Dashboard with left sidebar → `GET /api/me`      |
+| `/`                  | Redirects to `/login`                            |
+| `/login`             | Login (email or username) → `/admin`             |
+| `/register`          | Registration (claims username URL) → `/admin`    |
+| `/admin`             | Dashboard + “View Portfolio”                     |
 | `/admin/profile`     | Profile editor (API-backed)                      |
 | `/admin/sections`    | Sections (placeholder)                           |
-| `/admin/skills`      | Skills (placeholder)                             |
+| `/admin/skills`      | Skills module                                    |
 | `/admin/projects`    | Portfolio items (projects / case studies / works) |
 | `/admin/experience`  | Experience (timeline)                            |
 | `/admin/education`   | Education (timeline)                             |
 | `/admin/theme`       | Theme — frontend/public portfolio (coming soon)  |
 | `/admin/settings`    | Settings — admin brand colours                   |
+| `/{username}`        | Public portfolio page                            |
 
 ### Admin sidebar
 
@@ -115,22 +119,26 @@ php artisan db:seed --class=AdminSeeder
 
 Auth flow (client-side):
 
-1. Login stores Sanctum token in `localStorage` (`auth_token`)
-2. Dashboard loads user via `Authorization: Bearer {token}`
-3. Missing/invalid token redirects to `/login`
-4. Logout calls `POST /api/logout`, clears token, redirects to `/login`
+1. Register/Login stores Sanctum token in `localStorage` (`auth_token`)
+2. Redirect to `/admin` after success
+3. Admin pages load user via `Authorization: Bearer {token}`
+4. Missing/invalid token redirects to `/login`
+5. Logout calls `POST /api/logout`, clears token, redirects to `/login`
+6. Public portfolio: `/{username}` → `GET /api/portfolio/{username}` (no auth)
 
 JS modules:
 
 ```
 resources/js/
 ├── api.js              # fetch wrapper + token helpers
-├── auth.js             # login / logout / me
+├── auth.js             # login / register / logout / me
 ├── theme.js            # applyAdminTheme (admin panel only)
 ├── app.js              # page bootstrap
 └── pages/
     ├── login.js
+    ├── register.js
     ├── dashboard.js
+    ├── portfolio.js    # public /{username}
     └── settings.js
 ```
 
@@ -146,26 +154,52 @@ resources/js/
 
 ## Auth Endpoints
 
-| Method | URI             | Auth | Description             |
-|--------|-----------------|------|-------------------------|
-| POST   | `/api/register` | No   | Register + return token |
-| POST   | `/api/login`    | No   | Login + return token    |
-| POST   | `/api/logout`   | Yes  | Revoke current token    |
-| GET    | `/api/me`       | Yes  | Current user            |
-| GET    | `/api/settings` | Yes  | Admin brand colours     |
+| Method | URI             | Auth | Description                          |
+|--------|-----------------|------|--------------------------------------|
+| POST   | `/api/register` | No   | Register (name, username, email, password) |
+| POST   | `/api/login`    | No   | Login with `login` (email **or** username) + password |
+| POST   | `/api/logout`   | Yes  | Revoke current token                 |
+| GET    | `/api/me`       | Yes  | Current user                         |
+| GET    | `/api/user`     | Yes  | Alias of `/api/me`                   |
+| GET    | `/api/portfolio/{username}` | No | Public portfolio (active data only) |
+| GET    | `/api/settings` | Yes  | Admin brand colours                  |
+
+### Register (example)
+
+```http
+POST /api/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "username": "jane",
+  "email": "jane@example.com",
+  "password": "password",
+  "password_confirmation": "password"
+}
+```
 
 ### Login (example)
 
 ```http
 POST /api/login
-Content-Type: application/json
 Accept: application/json
+Content-Type: application/json
 
 {
-  "email": "admin@example.com",
+  "login": "jane",
   "password": "password"
 }
 ```
+
+Username rules: lowercase, URL-safe (`a-z`, `0-9`, `_`, `-`), unique, not reserved (`config/portfolio.php`).
+
+### Multi-tenant isolation
+
+- Every module table has `user_id`
+- Admin APIs always scope queries to `auth()->id()` via service ownership helpers
+- Public portfolio resolves `User` by `username`, then loads **only** that user's **active** records
 
 ### Authenticated requests
 
